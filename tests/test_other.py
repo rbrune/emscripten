@@ -7942,7 +7942,7 @@ test_module().then((test_module_instance) => {
       f.write(b'!<arch>\n')
     self.assertTrue(building.is_ar(fname))
 
-  def test_emcc_parsing(self):
+  def test_dash_s_list_parsing(self):
     create_file('src.c', r'''
         #include <stdio.h>
         void a() { printf("a\n"); }
@@ -7963,6 +7963,10 @@ test_module().then((test_module_instance) => {
       ('EXPORTED_FUNCTIONS=[_a,_b,_c,_d]', ''),
       # No quotes with spaces
       ('EXPORTED_FUNCTIONS=[_a, _b, _c, _d]', ''),
+      # No brackes needed either
+      ('EXPORTED_FUNCTIONS=_a,_b,_c,_d', ''),
+      # No brackes with spaced
+      ('EXPORTED_FUNCTIONS=_a, _b, _c, _d', ''),
       # extra space at end - should be ignored
       ("EXPORTED_FUNCTIONS=['_a', '_b', '_c', '_d' ]", ''),
       # extra newline in response file - should be ignored

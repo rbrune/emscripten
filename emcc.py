@@ -368,19 +368,19 @@ def apply_settings(changes):
       value = open(filename).read()
     else:
       value = value.replace('\\', '\\\\')
-    try:
-      value = parse_value(value)
-    except Exception as e:
-      exit_with_error('a problem occurred in evaluating the content after a "-s", specifically "%s": %s', change, str(e))
+
+    existing = getattr(shared.Settings, user_key, None)
+    expect_list = type(existing) == list
+
+    value = parse_value(value, expect_list)
 
     # Do some basic type checking by comparing to the existing settings.
     # Sadly we can't do this generically in the SettingsManager since there are settings
     # that so change types internally over time.
-    existing = getattr(shared.Settings, user_key, None)
-    if existing is not None:
-      # We only currently worry about lists vs non-lists.
-      if (type(existing) == list) != (type(value) == list):
-        exit_with_error('setting `%s` expects `%s` but got `%s`' % (user_key, type(existing), type(value)))
+    # We only currently worry about lists vs non-lists.
+    if expect_list != (type(value) == list):
+      exit_with_error('setting `%s` expects `%s` but got `%s`' % (user_key, type(existing), type(value)))
+
     setattr(shared.Settings, user_key, value)
 
     if key == 'EXPORTED_FUNCTIONS':
@@ -3327,9 +3327,9 @@ def is_valid_abspath(options, path_name):
   return False
 
 
-def parse_value(text):
-  if not text:
-    return text
+def parse_value(text, expect_list):
+  #if not text:
+    #return text
 
   # Note that using response files can introduce whitespace, if the file
   # has a newline at the end. For that reason, we rstrip() in relevant
@@ -3377,14 +3377,15 @@ def parse_value(text):
 
   def parse_string_list(text):
     text = text.rstrip()
-    if text[-1] != ']':
-      exit_with_error('unclosed opened string list. expected final character to be "]" in "%s"' % (text))
-    inner = text[1:-1]
-    if inner.strip() == "":
+    if text and text[0] == '[':
+      if text[-1] != ']':
+        exit_with_error('unclosed opened string list. expected final character to be "]" in "%s"' % (text))
+      text = text[1:-1]
+    if text.strip() == "":
       return []
-    return parse_string_list_members(inner)
+    return parse_string_list_members(text)
 
-  if text[0] == '[':
+  if expect_list or (text and text[0] == '['):
     # if json parsing fails, we fall back to our own parser, which can handle a few
     # simpler syntaxes
     try:
