@@ -63,12 +63,23 @@ long __map_file(int x, int y) {
   return -ENOSYS;
 }
 
-long __syscall91(int x, int y) { // munmap
+// munmap
+long __syscall91(int x, int y) {
   return -ENOSYS;
 }
 
-// mmap2()
+// ugetrlimit
+long __syscall191(int x, int y) {
+  return -ENOSYS;
+}
+
+// mmap2
 long __syscall192(long addr, long len, long prot, long flags, long fd, long off) {
+  return -ENOSYS;
+}
+
+// prlimit64
+long __syscall340(int a, int b, int c, int d) {
   return -ENOSYS;
 }
 
