@@ -751,7 +751,7 @@ def get_cflags(options, user_args):
 
   # if exception catching is disabled, we can prevent that code from being
   # generated in the frontend
-  if shared.Settings.DISABLE_EXCEPTION_CATCHING == 1 and not shared.Settings.EXCEPTION_HANDLING:
+  if shared.Settings.DISABLE_EXCEPTION_CATCHING and not shared.Settings.EXCEPTION_HANDLING:
     cflags.append('-fignore-exceptions')
 
   if shared.Settings.INLINING_LIMIT:
@@ -1578,6 +1578,14 @@ There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR P
       default_setting('ERROR_ON_UNDEFINED_SYMBOLS', 0)
       default_setting('WARN_ON_UNDEFINED_SYMBOLS', 0)
 
+    if shared.Settings.EXCEPTION_CATCHING_ALLOWED:
+      if 'DISABLE_EXCEPTION_CATCHING' in settings_key_changes:
+        if settings_key_changes['DISABLE_EXCEPTION_CATCHING'] == '2':
+          diagnostics.warning('deprecated', 'DISABLE_EXCEPTION_CATCHING is no longer needed when specifying EXCEPTION_CATCHING_ALLOWED')
+        else:
+          exit_with_error('DISABLE_EXCEPTION_CATCHING and EXCEPTION_CATCHING_ALLOWED are mutually exclusive')
+      shared.Settings.DISABLE_EXCEPTION_CATCHING = 0
+
     if shared.Settings.DISABLE_EXCEPTION_THROWING and not shared.Settings.DISABLE_EXCEPTION_CATCHING:
       exit_with_error("DISABLE_EXCEPTION_THROWING was set (probably from -fno-exceptions) but is not compatible with enabling exception catching (DISABLE_EXCEPTION_CATCHING=0). If you don't want exceptions, set DISABLE_EXCEPTION_CATCHING to 1; if you do want exceptions, don't link with -fno-exceptions")
 
@@ -1630,7 +1638,7 @@ There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR P
 
     if shared.Settings.USE_PTHREADS:
       if shared.Settings.USE_PTHREADS == 2:
-        exit_with_error('USE_PTHREADS=2 is not longer supported')
+        exit_with_error('USE_PTHREADS=2 is no longer supported')
       if shared.Settings.ALLOW_MEMORY_GROWTH:
         diagnostics.warning('pthreads-mem-growth', 'USE_PTHREADS + ALLOW_MEMORY_GROWTH may run non-wasm code slowly, see https://github.com/WebAssembly/design/issues/1271')
       # UTF8Decoder.decode may not work with a view of a SharedArrayBuffer, see https://github.com/whatwg/encoding/issues/172
@@ -1955,7 +1963,7 @@ There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR P
        shared.Settings.USE_PTHREADS or \
        shared.Settings.OFFSCREENCANVAS_SUPPORT or \
        shared.Settings.LEGACY_GL_EMULATION or \
-       shared.Settings.DISABLE_EXCEPTION_CATCHING != 1 or \
+       not shared.Settings.DISABLE_EXCEPTION_CATCHING or \
        shared.Settings.ASYNCIFY or \
        shared.Settings.ASMFS or \
        shared.Settings.DEMANGLE_SUPPORT or \
@@ -1968,7 +1976,7 @@ There is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR P
        sanitize:
       shared.Settings.EXPORTED_FUNCTIONS += ['_malloc', '_free']
 
-    if shared.Settings.DISABLE_EXCEPTION_CATCHING != 1:
+    if not shared.Settings.DISABLE_EXCEPTION_CATCHING:
       # If not for LTO builds, we could handle these by adding deps_info.py
       # entries for __cxa_find_matching_catch_* functions.  However, under
       # LTO these symbols don't exist prior the linking.

@@ -1236,7 +1236,6 @@ int main(int argc, char **argv)
     self.do_run('src.js', 'Caught exception: Hello\nDone.', args=['2'], no_build=True)
 
   def test_exceptions_allowed(self):
-    self.set_setting('DISABLE_EXCEPTION_CATCHING', 2)
     # Wasm does not add an underscore to function names. For wasm, the
     # mismatches are fixed in fixImports() function in JS glue code.
     self.set_setting('EXCEPTION_CATCHING_ALLOWED', ["_Z12somefunctionv"])
@@ -1267,7 +1266,7 @@ int main(int argc, char **argv)
       fake_size += os.path.getsize('test_exceptions_allowed.wasm')
     shutil.copyfile('test_exceptions_allowed.js', 'fake.js')
 
-    self.set_setting('DISABLE_EXCEPTION_CATCHING')
+    self.clear_setting('EXCEPTION_CATCHING_ALLOWED')
     self.do_run_from_file(src, empty_output, assert_returncode=NON_ZERO)
     disabled_size = os.path.getsize('test_exceptions_allowed.js')
     if self.is_wasm():
@@ -1278,14 +1277,14 @@ int main(int argc, char **argv)
     print('empty_size: %d' % empty_size)
     print('fake_size: %d' % fake_size)
     print('disabled_size: %d' % disabled_size)
-    self.assertEqual(empty_size, fake_size)
+    # empty list acts the same a full disable
+    self.assertEqual(empty_size, disabled_size)
     # big change when we disable exception catching of the function
     self.assertGreater(size - empty_size, 0.01 * size)
     # full disable can remove a little bit more
-    self.assertLess(disabled_size, empty_size)
+    self.assertLess(disabled_size, fake_size)
 
   def test_exceptions_allowed_2(self):
-    self.set_setting('DISABLE_EXCEPTION_CATCHING', 2)
     # Wasm does not add an underscore to function names. For wasm, the
     # mismatches are fixed in fixImports() function in JS glue code.
     self.set_setting('EXCEPTION_CATCHING_ALLOWED', ["main"])
@@ -1296,7 +1295,6 @@ int main(int argc, char **argv)
 
   def test_exceptions_allowed_uncaught(self):
     self.emcc_args += ['-std=c++11']
-    self.set_setting('DISABLE_EXCEPTION_CATCHING', 2)
     # Wasm does not add an underscore to function names. For wasm, the
     # mismatches are fixed in fixImports() function in JS glue code.
     self.set_setting('EXCEPTION_CATCHING_ALLOWED', ["_Z4testv"])
